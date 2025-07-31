@@ -1,4 +1,4 @@
-const API_BASE_URL = "https://gajpati-backend.onrender.com/api/v1";
+const API_BASE_URL = "http://localhost:3000/api/v1";
 
 class ApiService {
   constructor() {
@@ -6,6 +6,7 @@ class ApiService {
     this.isRefreshing = false;
     this.failedQueue = [];
   }
+
   processQueue(error, token = null) {
     this.failedQueue.forEach((prom) => {
       if (error) {
@@ -165,16 +166,14 @@ class ApiService {
   }
 
   async createProduct(productData) {
-    // productData should be a FormData object
     return this.request("/products/create", {
       method: "POST",
       body: productData,
-      headers: {}, // Let browser set Content-Type for FormData
+      headers: {},
     });
   }
 
   async updateProduct(id, productData) {
-    // productData should be a FormData object
     return this.request(`/products/${id}`, {
       method: "PUT",
       body: productData,
@@ -253,16 +252,14 @@ class ApiService {
   }
 
   async createNature(natureData) {
-    // natureData should be a FormData object
     return this.request("/natures/create", {
       method: "POST",
       body: natureData,
-      headers: {}, // Let browser set Content-Type for FormData
+      headers: {},
     });
   }
 
   async updateNature(id, natureData) {
-    // natureData should be a FormData object
     return this.request(`/natures/${id}`, {
       method: "PUT",
       body: natureData,
@@ -299,16 +296,14 @@ class ApiService {
   }
 
   async createBlog(blogData) {
-    // blogData should be a FormData object
     return this.request("/blogs/create", {
       method: "POST",
       body: blogData,
-      headers: {}, // Let browser set Content-Type for FormData
+      headers: {},
     });
   }
 
   async updateBlog(id, blogData) {
-    // blogData should be a FormData object
     return this.request(`/blogs/${id}`, {
       method: "PUT",
       body: blogData,
@@ -348,6 +343,48 @@ class ApiService {
 
   async deleteInquiry(id) {
     return this.request(`/inquires/${id}`, {
+      method: "DELETE",
+    });
+  }
+
+  // Quotes endpoints
+  async getQuotes(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return this.request(`/quotes?${queryString}`);
+  }
+
+  async getQuote(id) {
+    return this.request(`/quotes/${id}`);
+  }
+
+  async createQuote(quoteData) {
+    return this.request("/quotes/create", {
+      method: "POST",
+      body: JSON.stringify(quoteData),
+    });
+  }
+
+  async updateQuote(id, quoteData) {
+    return this.request(`/quotes/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(quoteData),
+    });
+  }
+
+  async deleteQuote(id) {
+    return this.request(`/quotes/${id}`, {
+      method: "DELETE",
+    });
+  }
+
+  // Subscribers endpoints
+  async getSubscribers(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return this.request(`/subscribers?${queryString}`);
+  }
+
+  async deleteSubscriber(id) {
+    return this.request(`/subscribers/${id}`, {
       method: "DELETE",
     });
   }

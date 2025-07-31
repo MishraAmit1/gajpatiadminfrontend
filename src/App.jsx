@@ -29,6 +29,11 @@ import ProductView from "./pages/ProductView";
 import InquiryView from "./pages/InquiryView";
 import BlogCreate from "./pages/BlogCreate";
 import BlogEdit from "./pages/BlogEdit";
+import NatureCreate from "./pages/NatureCreate";
+import NatureEdit from "./pages/NatureEdit";
+import Subscriber from "./pages/Subscriber";
+import Quotes from "./pages/Quotes";
+import QuoteView from "./pages/QuoteView";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -85,13 +90,18 @@ function App() {
               <Route path="products/:id" element={<ProductView />} />
               <Route path="plants" element={<Plants />} />
               <Route path="natures" element={<Natures />} />
+              <Route path="natures/create" element={<NatureCreate />} />
+              <Route path="natures/:id/edit" element={<NatureEdit />} />
+              <Route path="natures/:id" element={<NatureView />} />
               <Route path="blogs" element={<Blogs />} />
               <Route path="blogs/create" element={<BlogCreate />} />
               <Route path="blogs/:id/edit" element={<BlogEdit />} />
               <Route path="inquiries" element={<Inquiries />} />
               <Route path="inquiries/:id" element={<InquiryView />} />
+              <Route path="quotes" element={<Quotes />} />
+              <Route path="quotes/:id" element={<QuoteView />} />
               <Route path="users" element={<Users />} />
-              <Route path="natures/:id" element={<NatureView />} />
+              <Route path="subscribers" element={<Subscriber />} />
             </Route>
 
             {/* Redirect any unknown routes to login */}

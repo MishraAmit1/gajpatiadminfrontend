@@ -140,7 +140,7 @@ const NatureForm = ({
     <form onSubmit={handleSubmit} className="space-y-2">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
         <div>
-          <label className="block font-medium mb-0.5">Plant *</label>
+          {/* <label className="block font-medium mb-0.5">Plant *</label>
           <select
             name="plantId"
             value={selectedPlantId || values.plantId}
@@ -155,7 +155,7 @@ const NatureForm = ({
                 {plant.name}
               </option>
             ))}
-          </select>
+          </select> */}
           {touched.plantId && errors.plantId && (
             <div className="text-red-600 text-xs mt-1">{errors.plantId}</div>
           )}

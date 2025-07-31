@@ -61,7 +61,7 @@ A modern admin panel built with React, Vite, and shadcn/ui for managing Gajpati 
 Create a `.env` file in the root directory:
 
 ```env
-VITE_API_BASE_URL=http://localhost:3000/api/v1
+VITE_API_BASE_URL=https://gajpati-backend.onrender.com/api/v1
 ```
 
 ## Project Structure

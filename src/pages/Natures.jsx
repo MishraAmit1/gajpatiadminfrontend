@@ -23,7 +23,6 @@ import {
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/services/api";
-import NatureForm from "@/components/NatureForm";
 import { toast } from "react-hot-toast";
 import {
   DropdownMenu,
@@ -46,16 +45,10 @@ const Natures = () => {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [status, setStatus] = useState("all");
   const [page, setPage] = useState(1);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editNature, setEditNature] = useState(null);
   const [permanentDeleteId, setPermanentDeleteId] = useState(null);
   const [toggleId, setToggleId] = useState(null);
-  const [feedback, setFeedback] = useState({ type: "", message: "" });
   const [plantOptions, setPlantOptions] = useState([]);
-  const [selectedPlantId, setSelectedPlantId] = useState("");
   const navigate = useNavigate();
-
   const queryClient = useQueryClient();
 
   // Debounce search input
@@ -98,37 +91,6 @@ const Natures = () => {
     keepPreviousData: true,
   });
 
-  // Add Nature
-  const addMutation = useMutation({
-    mutationFn: async (formData) => {
-      return await api.createNature(formData);
-    },
-    onSuccess: () => {
-      setShowAddModal(false);
-      toast.success("Nature added successfully");
-      queryClient.invalidateQueries(["natures"]);
-    },
-    onError: (err) => {
-      toast.error(err.message || "Failed to add nature");
-    },
-  });
-
-  // Edit Nature
-  const editMutation = useMutation({
-    mutationFn: async ({ id, formData }) => {
-      return await api.updateNature(id, formData);
-    },
-    onSuccess: () => {
-      setShowEditModal(false);
-      setEditNature(null);
-      toast.success("Nature updated successfully");
-      queryClient.invalidateQueries(["natures"]);
-    },
-    onError: (err) => {
-      toast.error(err.message || "Failed to update nature");
-    },
-  });
-
   // Permanent Delete
   const permanentDeleteMutation = useMutation({
     mutationFn: async (id) => {
@@ -159,34 +121,6 @@ const Natures = () => {
     },
   });
 
-  // Fetch single nature for edit
-  const handleEdit = useCallback((nature) => {
-    setEditNature({
-      ...nature,
-      applications: Array.isArray(nature.applications)
-        ? nature.applications.join(", ")
-        : nature.applications,
-      keyFeatures: Array.isArray(nature.keyFeatures)
-        ? nature.keyFeatures.join(", ")
-        : nature.keyFeatures,
-      relatedIndustries: Array.isArray(nature.relatedIndustries)
-        ? nature.relatedIndustries.join(", ")
-        : nature.relatedIndustries,
-      seoKeywords: Array.isArray(nature.seoKeywords)
-        ? nature.seoKeywords.join(", ")
-        : nature.seoKeywords,
-    });
-    setShowEditModal(true);
-  }, []);
-
-  // Feedback auto-dismiss
-  useEffect(() => {
-    if (feedback.message) {
-      const t = setTimeout(() => setFeedback({ type: "", message: "" }), 4000);
-      return () => clearTimeout(t);
-    }
-  }, [feedback]);
-
   // Handlers
   const handleSearchChange = useCallback((e) => {
     setSearch(e.target.value);
@@ -200,10 +134,9 @@ const Natures = () => {
     setPage(newPage);
   }, []);
 
-  // Handler for plant change from NatureForm
-  const handlePlantChange = (plantId) => {
-    setSelectedPlantId(plantId);
-  };
+  // New handlers for navigation
+  const handleAddNature = () => navigate("/natures/create");
+  const handleEditNature = (id) => navigate(`/natures/${id}/edit`);
 
   return (
     <div className="space-y-6">
@@ -214,131 +147,11 @@ const Natures = () => {
             Manage product categories and types
           </p>
         </div>
-        <Button onClick={() => setShowAddModal(true)}>
+        <Button onClick={handleAddNature}>
           <Plus className="mr-2 h-4 w-4" />
           Add Nature
         </Button>
       </div>
-
-      {/* Add Nature Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg p-0 w-full max-w-2xl relative">
-            <div className="p-6">
-              <button
-                className="absolute top-2 right-2 text-gray-500 hover:text-gray-900 dark:hover:text-white"
-                onClick={() => {
-                  setShowAddModal(false);
-                  setSelectedPlantId("");
-                }}
-              >
-                &times;
-              </button>
-              <h2 className="text-2xl font-bold mb-4">Add Nature</h2>
-              <hr className="mb-4" />
-              {/* Plant select at the top */}
-              <div className="mb-4">
-                <label className="block font-medium mb-0.5">Plant *</label>
-                <select
-                  value={selectedPlantId}
-                  onChange={(e) => handlePlantChange(e.target.value)}
-                  className="w-full rounded-md border border-input px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-background"
-                >
-                  <option value="">Select Plant</option>
-                  {plantOptions.map((plant) => (
-                    <option key={plant._id} value={plant._id}>
-                      {plant.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              {/* Only show NatureForm if plant is selected */}
-              {selectedPlantId && (
-                <NatureForm
-                  onSubmit={(formData) => addMutation.mutate(formData)}
-                  onCancel={() => {
-                    setShowAddModal(false);
-                    setSelectedPlantId("");
-                  }}
-                  loading={addMutation.isLoading}
-                  plantOptions={plantOptions}
-                  selectedPlantId={selectedPlantId}
-                  onPlantChange={handlePlantChange}
-                />
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Nature Modal */}
-      {showEditModal && editNature && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg p-0 w-full max-w-2xl relative">
-            <div className="p-6">
-              <button
-                className="absolute top-2 right-2 text-gray-500 hover:text-gray-900 dark:hover:text-white"
-                onClick={() => {
-                  setShowEditModal(false);
-                  setEditNature(null);
-                  setSelectedPlantId("");
-                }}
-              >
-                &times;
-              </button>
-              <h2 className="text-2xl font-bold mb-4">Edit Nature</h2>
-              <hr className="mb-4" />
-              {/* Plant select at the top */}
-              <div className="mb-4">
-                <label className="block font-medium mb-0.5">Plant *</label>
-                <select
-                  value={
-                    selectedPlantId ||
-                    editNature.plantId?._id ||
-                    editNature.plantId ||
-                    ""
-                  }
-                  onChange={(e) => handlePlantChange(e.target.value)}
-                  className="w-full rounded-md border border-input px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-background"
-                >
-                  <option value="">Select Plant</option>
-                  {plantOptions.map((plant) => (
-                    <option key={plant._id} value={plant._id}>
-                      {plant.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              {/* Only show NatureForm if plant is selected */}
-              {(selectedPlantId ||
-                editNature.plantId?._id ||
-                editNature.plantId) && (
-                <NatureForm
-                  initialValues={editNature}
-                  onSubmit={(formData) =>
-                    editMutation.mutate({ id: editNature._id, formData })
-                  }
-                  onCancel={() => {
-                    setShowEditModal(false);
-                    setEditNature(null);
-                    setSelectedPlantId("");
-                  }}
-                  loading={editMutation.isLoading}
-                  isEdit
-                  plantOptions={plantOptions}
-                  selectedPlantId={
-                    selectedPlantId ||
-                    editNature.plantId?._id ||
-                    editNature.plantId ||
-                    ""
-                  }
-                  onPlantChange={handlePlantChange}
-                />
-              )}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Permanent Delete Confirm */}
       {permanentDeleteId && (
@@ -500,7 +313,7 @@ const Natures = () => {
                               <Eye className="h-4 w-4 mr-2" /> View
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                              onClick={() => handleEdit(nature)}
+                              onClick={() => handleEditNature(nature._id)}
                             >
                               <Edit className="h-4 w-4 mr-2" /> Edit
                             </DropdownMenuItem>

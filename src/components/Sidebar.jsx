@@ -12,6 +12,8 @@ import {
   Users,
   X,
   Settings,
+  MailCheck,
+  MessageSquareQuote,
 } from "lucide-react";
 
 const navigation = [
@@ -21,9 +23,10 @@ const navigation = [
   { name: "Natures", href: "/natures", icon: Leaf },
   { name: "Blogs", href: "/blogs", icon: FileText },
   { name: "Inquiries", href: "/inquiries", icon: MessageSquare },
-  { name: "Users", href: "/users", icon: Users },
+  { name: "Subscribe", href: "/subscribers", icon: MailCheck },
+  { name: "Quote", href: "/quotes", icon: MessageSquareQuote },
+  // { name: "Users", href: "/users", icon: Users },
 ];
-
 const Sidebar = ({ isOpen, isCollapsed, onClose, className }) => {
   return (
     <>

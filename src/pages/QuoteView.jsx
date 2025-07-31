@@ -24,10 +24,10 @@ const statusOptions = [
   { label: "Closed", value: "Closed" },
 ];
 
-const InquiryView = () => {
+const QuoteView = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [inquiry, setInquiry] = useState(null);
+  const [quote, setQuote] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [reply, setReply] = useState("");
@@ -36,21 +36,20 @@ const InquiryView = () => {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [success, setSuccess] = useState("");
   const [status, setStatus] = useState("");
-
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  // Fetch inquiry
+  // Fetch quote
   useEffect(() => {
     setLoading(true);
     setError("");
     api
-      .getInquiry(id)
+      .getQuote(id)
       .then((res) => {
-        setInquiry(res.data);
+        setQuote(res.data);
         setStatus(res.data.status);
       })
       .catch((err) => {
-        setError(err.message || "Failed to fetch inquiry");
+        setError(err.message || "Failed to fetch quote");
       })
       .finally(() => setLoading(false));
   }, [id]);
@@ -64,11 +63,11 @@ const InquiryView = () => {
     setError("");
     try {
       const newReplies = [
-        ...(inquiry.replies || []),
+        ...(quote.replies || []),
         { message: reply, repliedAt: new Date() },
       ];
-      await api.updateInquiry(id, { replies: newReplies });
-      setInquiry((prev) => ({ ...prev, replies: newReplies }));
+      await api.updateQuote(id, { replies: newReplies });
+      setQuote((prev) => ({ ...prev, replies: newReplies }));
       setReply("");
       setSuccess("Reply sent successfully.");
     } catch (err) {
@@ -80,13 +79,13 @@ const InquiryView = () => {
 
   // Update status
   const handleStatusUpdate = async (newStatus) => {
-    if (newStatus === inquiry.status) return;
+    if (newStatus === quote.status) return;
     setStatusLoading(true);
     setSuccess("");
     setError("");
     try {
-      await api.updateInquiry(id, { status: newStatus });
-      setInquiry((prev) => ({ ...prev, status: newStatus }));
+      await api.updateQuote(id, { status: newStatus });
+      setQuote((prev) => ({ ...prev, status: newStatus }));
       setStatus(newStatus);
       setSuccess("Status updated successfully.");
     } catch (err) {
@@ -96,16 +95,16 @@ const InquiryView = () => {
     }
   };
 
-  // Delete inquiry
+  // Delete quote
   const handleDelete = async () => {
     setDeleteLoading(true);
     setError("");
     try {
-      await api.deleteInquiry(id);
-      setSuccess("Inquiry deleted successfully.");
-      setTimeout(() => navigate("/inquiries"), 1000);
+      await api.deleteQuote(id);
+      setSuccess("Quote deleted successfully.");
+      setTimeout(() => navigate("/quotes"), 1000);
     } catch (err) {
-      setError(err.message || "Failed to delete inquiry");
+      setError(err.message || "Failed to delete quote");
     } finally {
       setDeleteLoading(false);
       setShowDeleteConfirm(false);
@@ -135,7 +134,7 @@ const InquiryView = () => {
       </div>
     );
   }
-  if (!inquiry) return null;
+  if (!quote) return null;
 
   return (
     <div className="max-w-3xl mx-auto py-8 space-y-6">
@@ -144,8 +143,8 @@ const InquiryView = () => {
       </Button>
       <Card>
         <CardHeader>
-          <CardTitle>Inquiry Details</CardTitle>
-          <CardDescription>View and manage this inquiry</CardDescription>
+          <CardTitle>Quote Details</CardTitle>
+          <CardDescription>View and manage this quote request</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {success && (
@@ -156,35 +155,23 @@ const InquiryView = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <div className="font-semibold">Customer Name:</div>
-              <div>{inquiry.customerName}</div>
+              <div>{quote.customerName}</div>
             </div>
             <div>
               <div className="font-semibold">Email:</div>
-              <div>{inquiry.customerEmail}</div>
+              <div>{quote.customerEmail}</div>
             </div>
             <div>
               <div className="font-semibold">Phone:</div>
-              <div>{inquiry.customerPhone}</div>
-            </div>
-            <div>
-              <div className="font-semibold">Company:</div>
-              <div>{inquiry.companyName}</div>
+              <div>{quote.customerPhone}</div>
             </div>
             <div>
               <div className="font-semibold">City:</div>
-              <div>{inquiry.city}</div>
-            </div>
-            <div>
-              <div className="font-semibold">Purpose:</div>
-              <Badge variant="outline">{inquiry.purpose}</Badge>
+              <div>{quote.city}</div>
             </div>
             <div>
               <div className="font-semibold">Products:</div>
-              <div>{inquiry.selectedProducts?.join(", ") || "-"}</div>
-            </div>
-            <div>
-              <div className="font-semibold">Consent:</div>
-              <div>{inquiry.consent ? "Yes" : "No"}</div>
+              <div>{quote.selectedProducts?.join(", ") || "-"}</div>
             </div>
             <div>
               <div className="font-semibold">Status:</div>
@@ -203,7 +190,7 @@ const InquiryView = () => {
             <div>
               <div className="font-semibold">Created At:</div>
               <div className="text-muted-foreground">
-                {new Date(inquiry.createdAt).toLocaleString("en-IN", {
+                {new Date(quote.createdAt).toLocaleString("en-IN", {
                   timeZone: "Asia/Kolkata",
                   dateStyle: "full",
                   timeStyle: "medium",
@@ -211,18 +198,14 @@ const InquiryView = () => {
               </div>
             </div>
             <div>
-              <div className="font-semibold">Inquiry Sent:</div>
+              <div className="font-semibold">Quote Sent:</div>
               <div className="text-muted-foreground">
-                {new Date(inquiry.updatedAt).toLocaleString("en-IN", {
+                {new Date(quote.updatedAt).toLocaleString("en-IN", {
                   timeZone: "Asia/Kolkata",
                   dateStyle: "full",
                   timeStyle: "medium",
                 })}
               </div>
-            </div>
-            <div className="md:col-span-2">
-              <div className="font-semibold">Description:</div>
-              <div>{inquiry.description || "-"}</div>
             </div>
           </div>
         </CardContent>
@@ -241,13 +224,13 @@ const InquiryView = () => {
         <CardHeader>
           <CardTitle>Replies</CardTitle>
           <CardDescription>
-            View and add replies to this inquiry
+            View and add replies to this quote request
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4 mb-4">
-            {inquiry.replies && inquiry.replies.length > 0 ? (
-              inquiry.replies.map((rep, idx) => (
+            {quote.replies && quote.replies.length > 0 ? (
+              quote.replies.map((rep, idx) => (
                 <div key={idx} className="rounded bg-muted p-3">
                   <div className="text-sm text-muted-foreground mb-1">
                     {new Date(rep.repliedAt).toLocaleString()}
@@ -277,9 +260,9 @@ const InquiryView = () => {
       {showDeleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg p-6 w-full max-w-sm relative">
-            <h2 className="text-lg font-bold mb-4">Delete Inquiry?</h2>
+            <h2 className="text-lg font-bold mb-4">Delete Quote?</h2>
             <p className="mb-4">
-              This will permanently delete the inquiry. This action cannot be
+              This will permanently delete the quote. This action cannot be
               undone.
             </p>
             <div className="flex gap-2 justify-end">
@@ -304,4 +287,4 @@ const InquiryView = () => {
   );
 };
 
-export default InquiryView;
+export default QuoteView;
