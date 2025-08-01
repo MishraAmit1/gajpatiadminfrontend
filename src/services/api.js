@@ -16,7 +16,6 @@ class ApiService {
         prom.resolve(token);
       }
     });
-
     this.failedQueue = [];
   }
 
@@ -28,103 +27,93 @@ class ApiService {
         "Content-Type": "application/json",
         ...options.headers,
       },
-      credentials: "include", // Include cookies
+      credentials: "include", // This is crucial for cookies!
       ...options,
     };
 
-    // Add auth token from header if available (for non-cookie requests)
-    const token = localStorage.getItem("authToken");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-
     try {
+      console.log(`🌐 Making request to: ${endpoint}`);
       const response = await fetch(url, config);
+
+      // Handle different response statuses
+      if (
+        response.status === 401 &&
+        !endpoint.includes("/refresh-token") &&
+        !endpoint.includes("/login")
+      ) {
+        console.log("🔒 401 Unauthorized - attempting token refresh");
+
+        // Try to refresh token
+        if (!this.isRefreshing) {
+          this.isRefreshing = true;
+
+          try {
+            const refreshResponse = await this.refreshToken();
+            console.log("🔄 Refresh response:", refreshResponse);
+
+            if (refreshResponse.success) {
+              this.processQueue(null, "refreshed");
+
+              // Retry the original request
+              console.log("🔄 Retrying original request");
+              const retryResponse = await fetch(url, config);
+
+              if (!retryResponse.ok) {
+                const retryErrorData = await retryResponse
+                  .json()
+                  .catch(() => ({}));
+                throw new Error(
+                  retryErrorData.message ||
+                    `HTTP error! status: ${retryResponse.status}`
+                );
+              }
+
+              return await retryResponse.json();
+            } else {
+              throw new Error("Token refresh failed");
+            }
+          } catch (refreshError) {
+            console.error("❌ Token refresh failed:", refreshError);
+            this.processQueue(refreshError, null);
+            throw refreshError;
+          } finally {
+            this.isRefreshing = false;
+          }
+        } else {
+          // Queue the request if already refreshing
+          return new Promise((resolve, reject) => {
+            this.failedQueue.push({ resolve, reject });
+          }).then(() => {
+            return fetch(url, config).then((response) => {
+              if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+              }
+              return response.json();
+            });
+          });
+        }
+      }
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-
-        // If token expired, try to refresh
-        if (
-          response.status === 401 &&
-          !endpoint.includes("/refresh-token") &&
-          !endpoint.includes("/login")
-        ) {
-          if (!this.isRefreshing) {
-            this.isRefreshing = true;
-
-            try {
-              const refreshResponse = await this.refreshToken();
-              if (refreshResponse.data?.accessToken) {
-                localStorage.setItem(
-                  "authToken",
-                  refreshResponse.data.accessToken
-                );
-                this.processQueue(null, refreshResponse.data.accessToken);
-
-                // Retry the original request
-                config.headers.Authorization = `Bearer ${refreshResponse.data.accessToken}`;
-                const retryResponse = await fetch(url, config);
-
-                if (!retryResponse.ok) {
-                  const retryErrorData = await retryResponse
-                    .json()
-                    .catch(() => ({}));
-                  throw new Error(
-                    retryErrorData.message ||
-                      `HTTP error! status: ${retryResponse.status}`
-                  );
-                }
-
-                return await retryResponse.json();
-              }
-            } catch (refreshError) {
-              this.processQueue(refreshError, null);
-              // Clear auth state on refresh failure
-              localStorage.removeItem("authToken");
-              window.location.href = "/login";
-              throw refreshError;
-            } finally {
-              this.isRefreshing = false;
-            }
-          } else {
-            // Queue the request
-            return new Promise((resolve, reject) => {
-              this.failedQueue.push({ resolve, reject });
-            })
-              .then((token) => {
-                config.headers.Authorization = `Bearer ${token}`;
-                return fetch(url, config).then((response) => {
-                  if (!response.ok) {
-                    const errorData = response.json().catch(() => ({}));
-                    throw new Error(
-                      errorData.message ||
-                        `HTTP error! status: ${response.status}`
-                    );
-                  }
-                  return response.json();
-                });
-              })
-              .catch((err) => {
-                throw err;
-              });
-          }
-        }
-
+        console.error(`❌ Request failed:`, errorData);
         throw new Error(
           errorData.message || `HTTP error! status: ${response.status}`
         );
       }
 
-      return await response.json();
+      const data = await response.json();
+      console.log(`✅ Request successful:`, endpoint);
+      return data;
     } catch (error) {
-      console.error("API request failed:", error);
+      console.error(`❌ API request failed for ${endpoint}:`, error);
       throw error;
     }
   }
 
   // Auth endpoints
   async login(credentials) {
+    console.log("🔐 Attempting login...");
     return this.request("/users/login", {
       method: "POST",
       body: JSON.stringify(credentials),
@@ -139,21 +128,39 @@ class ApiService {
   }
 
   async logout() {
+    console.log("🚪 Logging out...");
     return this.request("/users/logout", {
       method: "POST",
     });
   }
-
   async refreshToken() {
-    return this.request("/users/refresh-token", {
-      method: "POST",
-    });
+    console.log("🔄 Refreshing token...");
+    try {
+      const response = await this.request("/users/refresh-token", {
+        method: "POST",
+      });
+      return response;
+    } catch (error) {
+      console.error("❌ Refresh token request failed:", error);
+      throw error;
+    }
   }
 
   async getCurrentUser() {
-    return this.request("/users/me", {
-      method: "GET",
-    });
+    try {
+      const response = await this.request("/users/me", {
+        method: "GET",
+      });
+      return {
+        success: true,
+        data: response.data, // Ensure the backend returns { data: user }
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
   }
 
   // Products endpoints (with FormData for file upload)
@@ -170,7 +177,7 @@ class ApiService {
     return this.request("/products/create", {
       method: "POST",
       body: productData,
-      headers: {},
+      headers: {}, // Remove Content-Type for FormData
     });
   }
 
@@ -178,7 +185,7 @@ class ApiService {
     return this.request(`/products/${id}`, {
       method: "PUT",
       body: productData,
-      headers: {},
+      headers: {}, // Remove Content-Type for FormData
     });
   }
 
@@ -244,7 +251,7 @@ class ApiService {
 
   // Natures endpoints (with FormData for image upload)
   async getNatures(params = {}) {
-    const queryString = new URLSearchParams(params).toString();
+    const queryString = new URLSearchParameters(params).toString();
     return this.request(`/natures/allNatures?${queryString}`);
   }
 
@@ -256,7 +263,7 @@ class ApiService {
     return this.request("/natures/create", {
       method: "POST",
       body: natureData,
-      headers: {},
+      headers: {}, // Remove Content-Type for FormData
     });
   }
 
@@ -264,7 +271,7 @@ class ApiService {
     return this.request(`/natures/${id}`, {
       method: "PUT",
       body: natureData,
-      headers: {},
+      headers: {}, // Remove Content-Type for FormData
     });
   }
 
@@ -300,7 +307,7 @@ class ApiService {
     return this.request("/blogs/create", {
       method: "POST",
       body: blogData,
-      headers: {},
+      headers: {}, // Remove Content-Type for FormData
     });
   }
 
@@ -308,7 +315,7 @@ class ApiService {
     return this.request(`/blogs/${id}`, {
       method: "PUT",
       body: blogData,
-      headers: {},
+      headers: {}, // Remove Content-Type for FormData
     });
   }
 
