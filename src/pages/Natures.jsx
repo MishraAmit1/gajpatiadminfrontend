@@ -133,11 +133,9 @@ const Natures = () => {
   const handlePageChange = useCallback((newPage) => {
     setPage(newPage);
   }, []);
-
   // New handlers for navigation
   const handleAddNature = () => navigate("/natures/create");
   const handleEditNature = (id) => navigate(`/natures/${id}/edit`);
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -263,6 +261,8 @@ const Natures = () => {
                       className="px-4 py-2 text-center text-destructive"
                     >
                       Failed to load natures.
+                      <br />
+                      {data?.message || "Unknown error"}
                     </td>
                   </tr>
                 ) : data &&

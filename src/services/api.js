@@ -1,5 +1,5 @@
-// const API_BASE_URL = "http://localhost:3000/api/v1";
-const API_BASE_URL = "https://gajpati-backend.onrender.com/api/v1";
+const API_BASE_URL = "http://localhost:3000/api/v1";
+// const API_BASE_URL = "https://gajpati-backend.onrender.com/api/v1";
 
 class ApiService {
   constructor() {
@@ -251,7 +251,7 @@ class ApiService {
 
   // Natures endpoints (with FormData for image upload)
   async getNatures(params = {}) {
-    const queryString = new URLSearchParameters(params).toString();
+    const queryString = new URLSearchParams(params).toString();
     return this.request(`/natures/allNatures?${queryString}`);
   }
 
