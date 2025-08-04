@@ -221,8 +221,12 @@ const Products = () => {
             <table className="min-w-full text-sm">
               <thead>
                 <tr className="bg-muted">
-                  <th className="px-4 py-2 text-left font-semibold">Name</th>
-                  <th className="px-4 py-2 text-left font-semibold">Abbr.</th>
+                  <th className="px-4 py-2 text-left font-semibold">
+                    Technical Name
+                  </th>
+                  <th className="px-4 py-2 text-left font-semibold">
+                    Company Name
+                  </th>
                   <th className="px-4 py-2 text-left font-semibold">Nature</th>
                   <th className="px-4 py-2 text-left font-semibold">Plant</th>
                   <th className="px-4 py-2 text-left font-semibold">Status</th>

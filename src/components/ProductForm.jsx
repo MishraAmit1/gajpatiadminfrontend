@@ -351,7 +351,7 @@ const ProductForm = ({
     <form onSubmit={handleSubmit} className="space-y-2">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
         <div>
-          <label className="block font-medium mb-0.5">Name *</label>
+          <label className="block font-medium mb-0.5">Technical Name *</label>
           <Input
             name="name"
             value={values.name}
@@ -366,7 +366,7 @@ const ProductForm = ({
           )}
         </div>
         <div>
-          <label className="block font-medium mb-0.5">Abbreviation *</label>
+          <label className="block font-medium mb-0.5">Company Name *</label>
           <Input
             name="abbreviation"
             value={values.abbreviation}
